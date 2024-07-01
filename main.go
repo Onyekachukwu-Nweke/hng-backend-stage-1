@@ -27,6 +27,12 @@ type IP2LocationResponse struct {
 	Longitude float64 `json:"longitude"`
 }
 
+type OpenWeatherResponse struct {
+	Main struct {
+		Temp float64 `json:"temp"`
+	} `json:"main"`
+}
+
 func main() {
 	err := godotenv.Load()
 	if err != nil {
@@ -58,8 +64,13 @@ func helloHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	temperature := getTemperature()
-	greeting := fmt.Sprintf("Hello, %s! The temperature is %d degrees Celsius in %s", visitorName, temperature, location.City)
+	temperature, err := getTemperature(location.City)
+	if err != nil {
+		http.Error(w, "Error getting temperature", http.StatusInternalServerError)
+		return
+	}
+
+	greeting := fmt.Sprintf("Hello, %s! The temperature is %.2f degrees Celsius in %s", visitorName, temperature, location.City)
 
 	response := Response{
 		ClientIP: clientIP,
@@ -116,8 +127,28 @@ func getLocation(ip string) (*IP2LocationResponse, error) {
 	return &location, nil
 }
 
-func getTemperature() int {
+func getTemperature(city string) (float64, error) {
 	// Mocking the temperature for simplicity.
 	// In a real application, you would call a weather API here.
-	return 11
+	apiKey := os.Getenv("OPENWEATHER_API_KEY")
+	url := fmt.Sprintf("http://api.openweathermap.org/data/2.5/forecast?q=%s&appid=%s&units=metric", city, apiKey)
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return 0, err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return 0, err
+	}
+
+	var weatherResponse OpenWeatherResponse
+	err = json.Unmarshal(body, &weatherResponse)
+	if err != nil {
+		return 0, err
+	}
+
+	return weatherResponse.Main.Temp, nil
 }
