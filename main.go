@@ -128,10 +128,10 @@ func getLocation(ip string) (*IP2LocationResponse, error) {
 }
 
 func getTemperature(city string) (float64, error) {
-	// Mocking the temperature for simplicity.
-	// In a real application, you would call a weather API here.
 	apiKey := os.Getenv("OPENWEATHER_API_KEY")
 	url := fmt.Sprintf("http://api.openweathermap.org/data/2.5/forecast?q=%s&appid=%s&units=metric", city, apiKey)
+
+	fmt.Println(url)
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -149,6 +149,8 @@ func getTemperature(city string) (float64, error) {
 	if err != nil {
 		return 0, err
 	}
+
+	fmt.Println(weatherResponse.Main.Temp)
 
 	return weatherResponse.Main.Temp, nil
 }
