@@ -28,9 +28,11 @@ type IP2LocationResponse struct {
 }
 
 type OpenWeatherResponse struct {
-	Main struct {
-		Temp float64 `json:"temp"`
-	} `json:"main"`
+	List []struct {
+		Main struct {
+			Temp float64 `json:"temp"`
+		} `json:"main"`
+	} `json:"list"`
 }
 
 func main() {
@@ -150,7 +152,7 @@ func getTemperature(city string) (float64, error) {
 		return 0, err
 	}
 
-	fmt.Println(weatherResponse.Main.Temp)
+	fmt.Println(weatherResponse.List[0].Main.Temp)
 
-	return weatherResponse.Main.Temp, nil
+	return weatherResponse.List[0].Main.Temp, nil
 }
